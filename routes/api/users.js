@@ -3,6 +3,12 @@ const router = express.Router();
 const User = require('../../models/User');
 const gravatar = require('gravatar');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const keys = require('../../config/keys');
+const passport = require('passport');
+
+
+
 
 // @route   POST api/users/register
 // @desc    Register user
@@ -64,14 +70,40 @@ router.post('/login', (req, res) => {
       bcrypt.compare(password, user.password)
         .then(isMatch => {
           if (isMatch) {
-            return res.json({msg: 'Success'});
-          }
+          //User matched
+          const payload = {
+            id: user.id,
+            name: user.name,
+            avatar: user.avatar,
+          };
 
-          return res.status(400).json({password: 'Password incorrect'});
-        })
+          //Sign a token
+          jwt.sign(
+            payload, 
+            keys.secretOrKey,
+            {expiresIn: 3600},
+            (err, token) => {
+              return res.json({
+                success: true,
+                token: 'Bearer' + token
+              });
+            }
+          );
+        }
+        else {
+          return res.status(400).json({password: 'Password incorrect'}); 
+        }
     })
     .catch(err => console.log(err));
+  });
+});
+// @route   GET api/users/current user
+// @desc    Return current user
+// @access  Private
+router.get('/current', passport.authenticate('jwt', {session: false}), (req, res) => {
+  res.json({msg: 'Success'});
 })
+
 
 module.exports = router;
 
