@@ -27,7 +27,7 @@ if (!isValid){
     .then(user => {
       if (user) {
         errors.email = 'Email already exists';
-        return res.status(400).json(erros)
+        return res.status(400).json(errors)
       } else {
         const avatar = gravatar.url(req.body.email, {
           s: '200',
